@@ -1,2 +1,2 @@
-# MDE_Queries
-# Repository for handy advancded hunting queries.
+# MDE_Advanced Hunting Queries
+Repository for handy advancded hunting queries.
