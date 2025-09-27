@@ -1,0 +1,39 @@
+// Advanced Hunting Query for Risky Sign-ins Analysis
+// Exclude specific applications from analysis
+let ExcludedApps = pack_array(‘CIT_JamfConnect@Prod’, ‘TestAppIEST2’);
+
+// Step 1: Get risky sign-ins from the last day
+let RiskySignIns = AADSignInEventsBeta
+| where TimeGenerated > ago(1d)
+| where RiskDuringSignIn()
+| where Application !in (ExcludedApps)
+| where RiskLevel_During_SignIn > 50; // Risk level threshold
+
+// Step 2: Build historical IP counts for the last 29 days
+let HistoricalIPCounts = AADSignInEventsBeta
+| where ErrorCode == 0
+| where TimeGenerated >= ago(29d)
+| summarize IPCount = count() by IPAddress, AccountUpn;
+
+// Step 3: Build the IP list per account for the last 28 days
+let HistoricalIPs = AADSignInEventsBeta
+| where ErrorCode == 0
+| where TimeGenerated >= ago(28d)
+| summarize HistoricalIPs = make_set(IPAddress) by AccountUpn;
+
+// Step 4: Join with RiskySignIns and analyze IP risk
+RiskySignIns
+| join kind=leftouter HistoricalIPs on AccountUpn
+| join kind=leftouter HistoricalIPCounts on IPAddress, AccountUpn
+| where IPRiskLevel startswith “High”
+| project
+TimeGenerated,
+AccountUpn,
+IPAddress,
+Application,
+RiskLevel_During_SignIn,
+IPRiskLevel,
+IPSeenBefore = iff(isnotempty(IPCount), true, false),
+IPSeenCount = iff(isnotempty(IPCount), IPCount, 0),
+HistoricalIPs
+| order by TimeGenerated desc
