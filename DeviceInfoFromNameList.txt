@@ -1,0 +1,9 @@
+let devicePrefixes = dynamic([
+    "DEVICE01",
+    "DEVICE02",
+    "DEVICE03"
+]);
+DeviceInfo
+| where DeviceName has_any (devicePrefixes)
+| summarize arg_max(Timestamp, OSPlatform) by DeviceName
+| project DeviceName, OSPlatform
