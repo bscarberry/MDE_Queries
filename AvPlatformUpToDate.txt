@@ -5,16 +5,14 @@ DeviceInfo
     DeviceTvmInfoGathering
     | where isnotempty(AdditionalFields)
     | extend ParsedFields = parse_json(AdditionalFields)
-    | extend AvPlatform = tostring(ParsedFields.AvPlatform)
     | extend AvPlatformVersion = tostring(ParsedFields.AvPlatformVersion)
-    | extend AvPlatformVersionUpToDate = tostring(ParsedFields.IsAvPlatformVersionUpToDate)
-    | where isnotempty(AvPlatform)
-    | summarize arg_max(Timestamp, AvPlatform, AvPlatformVersion, AvPlatformVersionUpToDate) by DeviceId
+    | extend AvPlatformVersionUpToDate = tostring(ParsedFields.AvIsPlatformUptodate)
+    | where isnotempty(AvPlatformVersion)
+    | summarize arg_max(Timestamp, AvPlatformVersion, AvPlatformVersionUpToDate) by DeviceId
 ) on DeviceId
 | project 
     DeviceName,
     OSPlatform,
-    AvPlatform,
     AvPlatformVersion,
     AvPlatformVersionUpToDate = case(
         AvPlatformVersionUpToDate == "true", "Yes",
