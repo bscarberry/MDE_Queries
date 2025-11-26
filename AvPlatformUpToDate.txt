@@ -1,0 +1,24 @@
+DeviceInfo
+| where isnotempty(DeviceId)
+| summarize arg_max(Timestamp, OSPlatform, DeviceName) by DeviceId
+| join kind=inner (
+    DeviceTvmInfoGathering
+    | where isnotempty(AdditionalFields)
+    | extend ParsedFields = parse_json(AdditionalFields)
+    | extend AvPlatform = tostring(ParsedFields.AvPlatform)
+    | extend AvPlatformVersion = tostring(ParsedFields.AvPlatformVersion)
+    | extend AvPlatformVersionUpToDate = tostring(ParsedFields.IsAvPlatformVersionUpToDate)
+    | where isnotempty(AvPlatform)
+    | summarize arg_max(Timestamp, AvPlatform, AvPlatformVersion, AvPlatformVersionUpToDate) by DeviceId
+) on DeviceId
+| project 
+    DeviceName,
+    OSPlatform,
+    AvPlatform,
+    AvPlatformVersion,
+    AvPlatformVersionUpToDate = case(
+        AvPlatformVersionUpToDate == "true", "Yes",
+        AvPlatformVersionUpToDate == "false", "No",
+        "Unknown"
+    )
+| sort by DeviceName asc
