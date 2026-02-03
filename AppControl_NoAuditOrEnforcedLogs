@@ -14,4 +14,7 @@ let DevicesWithAppControl = DeviceEvents
 | summarize by DeviceName;
 // Return devices from your list that don't have App Control events
 DevicesToCheck
-| where tolower(DeviceName) !in (DevicesWithAppControl | project tolower(DeviceName))
+| join kind=leftanti (
+    DevicesWithAppControl
+    | extend ShortName = tostring(split(DeviceName, ".")[0])
+) on $left.DeviceName == $right.ShortName
