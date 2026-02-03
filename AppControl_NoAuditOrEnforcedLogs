@@ -14,4 +14,4 @@ let DevicesWithAppControl = DeviceEvents
 | summarize by DeviceName;
 // Return devices from your list that don't have App Control events
 DevicesToCheck
-| where DeviceName !in (DevicesWithAppControl)
+| where tolower(DeviceName) !in (DevicesWithAppControl | project tolower(DeviceName))
