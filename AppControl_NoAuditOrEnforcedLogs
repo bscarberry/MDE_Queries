@@ -1,0 +1,17 @@
+// Define your list of devices to check
+let DevicesToCheck = datatable(DeviceName: string)
+[
+    "Device1",
+    "Device2",
+    "Device3"
+    // Add your comma-separated devices here
+];
+// Find devices that DO have App Control events
+let DevicesWithAppControl = DeviceEvents
+| where ActionType has_any ("AppControlCodeIntegrityPolicyAudited", "AppControlCodeIntegrityPolicyBlocked", 
+                            "AppControlCIScriptAudited", "AppControlCIScriptBlocked",
+                            "AppControlCodeIntegrityDriverRevoked", "AppControlCodeIntegrityPolicyLoaded")
+| summarize by DeviceName;
+// Return devices from your list that don't have App Control events
+DevicesToCheck
+| where DeviceName !in (DevicesWithAppControl)
